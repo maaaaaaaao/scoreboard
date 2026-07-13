@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Lacrosse Scoreboard Control</title>
+    <link rel="stylesheet" href="/style.css" />
+  </head>
+  <body class="control-page">
+    <div class="app-shell">
+      <header class="hero">
+        <div>
+          <p class="eyebrow">Live scoreboard control</p>
+          <h1>Lacrosse Scoreboard</h1>
+        </div>
+        <a class="overlay-link" href="/overlay.html" target="_blank" rel="noreferrer">Open OBS overlay</a>
+      </header>
+
+      <main class="control-grid">
+        <section class="panel">
+          <h2>Team Names</h2>
+          <div class="field">
+            <p><strong>ホームチーム</strong></p>
+            <p>筑波</p>
+          </div>
+          <div class="field">
+            <label for="awayName">Away Team Name</label>
+            <input id="awayName" maxlength="18" placeholder="Away Team" />
+          </div>
+          <div class="field">
+            <label for="awayLogoFile" style="font-weight: bold; display: block; margin-bottom: 5px;">Away Team Logo</label>
+            <input type="file" id="awayLogoFile" accept="image/*" style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; cursor: pointer;" />
+          </div>
+        </section>
+
+        <section class="panel">
+          <h2>Scoring</h2>
+          <div class="score-card">
+            <div class="score-row">
+              <div>
+                <p class="team-label">Home</p>
+                <p class="score-value" id="homeScoreDisplay">0</p>
+              </div>
+              <div class="score-buttons">
+                <button class="score-btn" data-team="home" data-action="add">+</button>
+                <button class="score-btn" data-team="home" data-action="subtract">-</button>
+              </div>
+            </div>
+            <div class="score-row">
+              <div>
+                <p class="team-label">Away</p>
+                <p class="score-value" id="awayScoreDisplay">0</p>
+              </div>
+              <div class="score-buttons">
+                <button class="score-btn" data-team="away" data-action="add">+</button>
+                <button class="score-btn" data-team="away" data-action="subtract">-</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="quarter-controls" aria-label="Quarter selector">
+            <button class="quarter-btn active" data-quarter="Q1">Q1</button>
+            <button class="quarter-btn" data-quarter="Q2">Q2</button>
+            <button class="quarter-btn" data-quarter="Q3">Q3</button>
+            <button class="quarter-btn" data-quarter="Q4">Q4</button>
+          </div>
+
+          <button id="resetButton" class="reset-btn">Reset Score</button>
+        </section>
+      </main>
+    </div>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="/script.js"></script>
+  </body>
+</html>

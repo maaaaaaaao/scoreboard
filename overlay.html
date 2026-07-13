@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Lacrosse Scoreboard Overlay</title>
+  <link rel="stylesheet" href="/style.css">
+</head>
+
+<body class="overlay-page">
+  <div class="overlay-stage">
+    <div class="scoreboard">
+
+      <div class="team home-team">
+        <img src="/images/筑波ロゴ.avif" class="logo" alt="筑波大学ロゴ">
+
+        <div class="team-info">
+          <div class="team-name" id="overlayHomeName">筑波</div>
+          <div class="team-score" id="overlayHomeScore">0</div>
+        </div>
+      </div>
+
+      <div class="center-panel">
+        <div class="period" id="overlayQuarter">Q1</div>
+        <div class="vs">VS</div>
+      </div>
+
+      <div class="team away-team">
+        <div class="team-info">
+          <div class="team-name" id="overlayAwayName">AWAY</div>
+          <div class="team-score" id="overlayAwayScore">0</div>
+        </div>
+        
+        <img id="overlayAwayLogo" src="/images/default-away.png" class="logo" alt="アウェイチームロゴ">
+      </div>
+
+    </div>
+  </div>
+
+  <script src="/socket.io/socket.io.js"></script>
+  <script src="/script.js"></script>
+</body>
+</html>
