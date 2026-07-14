@@ -1,310 +1,110 @@
-:root {
-  color-scheme: dark;
-  --bg: #07131f;
-  --panel: rgba(7, 19, 31, 0.92);
-  --accent: #32d4ff;
-  --accent-2: #ff6b6b;
-  --text: #f7fbff;
-  --muted: #96a8b8;
+/* 全体背景（OBSで透過するために透明に設定） */
+body.overlay-page {
+  margin: 0;
+  padding: 0;
+  background-color: transparent;
+  overflow: hidden;
+  font-family: 'Helvetica Neue', Arial, sans-serif;
 }
 
-* {
+/* スコアボードの外枠ステージ */
+.overlay-stage {
+  width: 100vw;
+  height: 100vh;
+  display: flex;
+  align-items: flex-start;
+  justify-content: flex-start;
+  padding: 20px;
   box-sizing: border-box;
 }
 
-body {
-  margin: 0;
-  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
-  background: rgba(255, 255, 255, 0.75);
-backdrop-filter: blur(8px);
--webkit-backdrop-filter: blur(8px);
-  color: var(--text);
-}
-
-.control-page {
-  min-height: 100vh;
-  padding: 24px;
-}
-
-.app-shell {
-  max-width: 980px;
-  margin: 0 auto;
-}
-
-.hero {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 18px;
-  margin-bottom: 24px;
-}
-
-.eyebrow {
-  margin: 0 0 6px;
-  text-transform: uppercase;
-  letter-spacing: 0.2em;
-  font-size: 0.78rem;
-  color: var(--accent);
-}
-
-h1,
-h2,
-h3,
-p {
-  margin: 0;
-}
-
-.overlay-link {
-  text-decoration: none;
-  color: var(--text);
-  background: rgba(255, 255, 255, 0.12);
-  padding: 10px 14px;
-  border-radius: 999px;
-  font-weight: 600;
-}
-
-.control-grid {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 20px;
-}
-
-.panel {
-  background: var(--panel);
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  border-radius: 24px;
-  padding: 24px;
-  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.25);
-}
-
-.field {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  margin-bottom: 16px;
-}
-
-label {
-  font-size: 0.95rem;
-  color: var(--muted);
-}
-
-input {
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  border-radius: 12px;
-  padding: 12px 14px;
-  font-size: 1rem;
-  background: rgba(255, 255, 255, 0.08);
-  color: var(--text);
-}
-
-.score-card {
-  display: grid;
-  gap: 16px;
-  margin: 18px 0 20px;
-}
-
-.score-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 14px 16px;
-  border-radius: 16px;
-  background: rgba(255, 255, 255, 0.06);
-}
-
-.team-label {
-  font-size: 0.9rem;
-  text-transform: uppercase;
-  color: var(--muted);
-  margin-bottom: 6px;
-}
-
-.score-value {
-  font-size: 2.2rem;
-  font-weight: 800;
-}
-
-.score-buttons {
-  display: flex;
-  gap: 10px;
-}
-
-.score-btn,
-.quarter-btn,
-.reset-btn {
-  border: none;
-  border-radius: 999px;
-  padding: 10px 14px;
-  font-weight: 700;
-  cursor: pointer;
-  transition: transform 0.2s ease, background 0.2s ease;
-}
-
-.score-btn:hover,
-.quarter-btn:hover,
-.reset-btn:hover {
-  transform: translateY(-1px);
-}
-
-.score-btn {
-  width: 44px;
-  height: 44px;
-  font-size: 1.2rem;
-  background: var(--accent);
-  color: #052238;
-}
-
-.quarter-controls {
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 10px;
-  margin-bottom: 16px;
-}
-
-.quarter-btn {
-  background: rgba(255, 255, 255, 0.12);
-  color: var(--text);
-}
-
-.quarter-btn.active {
-  background: var(--accent-2);
-  color: white;
-}
-
-.reset-btn {
-  width: 100%;
-  padding: 12px 16px;
-  background: var(--accent);
-  color: #04253b;
-}
-
-.overlay-page {
-  min-height: 100vh;
-  display: grid;
-  place-items: center;
-  overflow: hidden;
-}
-
-.overlay-stage {
-  width: 100%;
-  height: 100vh;
-  display: grid;
-  place-items: center;
-  padding: 24px;
-}
-
+/* ★ スコアボード本体：ご希望の 700px × 180px（約200px）サイズに変更 */
 .scoreboard {
-  width: min(100%, 1100px);
-  display: grid;
-  grid-template-columns: 1fr auto 1fr;
+  display: flex;
   align-items: center;
-  gap: 20px;
-  padding: 28px 36px;
-  background:  rgba(255,255,255,0.75);
-backdrop-filter: blur(8px);
--webkit-backdrop-filter: blur(8px);
-  border: 2px solid rgba(255, 255, 255, 0.16);
-  border-radius: 28px;
-  box-shadow: 0 22px 60px rgba(0, 0, 0, 0.4);
-  color:#000;
+  justify-content: space-between;
+  background-color: rgba(220, 220, 220, 0.95); /* 落ち着いたグレー */
+  border-radius: 20px; /* 角丸も少し大きくしてリッチに */
+  padding: 15px 30px; 
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.4);
+  width: 700px; /* ★ 横幅 700px */
+  height: 160px; /* ★ 上下の余白と合わせて約200pxのサイズ感になります */
+  box-sizing: border-box;
 }
 
+/* チームエリア共通（確実に横並び） */
 .team {
   display: flex;
-  flex-direction: row;
   align-items: center;
-  justify-content: center;
-  gap: 30px;
-  padding: 16px 20px;
-  min-height: 220px;
+  gap: 15px; 
+  width: 40%; 
 }
 
 .home-team {
-  border-right: 1px solid rgba(255, 255, 255, 0.1);
+  justify-content: flex-start;
 }
 
 .away-team {
-  border-left: 1px solid rgba(255, 255, 255, 0.1);
+  justify-content: flex-end;
 }
 
+/* ロゴ画像のサイズ調整：ボードが大きくなったのでロゴも大きく */
+.logo {
+  height: 90px !important; 
+  width: auto;
+  object-fit: contain;
+}
+
+/* チーム名とスコアをまとめるエリア */
+.team-info {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+/* チーム名：画面サイズに合わせて大きく */
 .team-name {
-   font-size: clamp(2rem, 4vw, 3.5rem);
-  font-weight: 800;
-  letter-spacing: 0.03em;
-  text-align: center;
-  color: #000;
+  font-size: 32px;
+  font-weight: bold;
+  color: #111;
+  white-space: nowrap;
 }
 
+/* 得点：一番目立たせるためにかなり大きく */
 .team-score {
-  font-size: clamp(3.2rem, 8vw, 6rem);
+  font-size: 64px;
   font-weight: 900;
-  line-height: 1;
   color: #000;
+  min-width: 60px;
+  text-align: center;
 }
 
+/* 中央パネル（QとVS） */
 .center-panel {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 8px;
-  min-width: 140px;
+  justify-content: center;
+  width: 20%;
+  border-left: 2px solid rgba(0, 0, 0, 0.15);
+  border-right: 2px solid rgba(0, 0, 0, 0.15);
+  padding: 0 10px;
+  height: 100%;
 }
 
+/* クォーター（Q1など） */
 .period {
-   font-size: clamp(2rem, 5vw, 4rem);
-  font-weight: 900;
-  color: #000;
+  font-size: 28px;
+  font-weight: bold;
+  color: #222;
+  line-height: 1.1;
+  margin-bottom: 5px;
 }
 
+/* VSの文字 */
 .vs {
-  font-size: clamp(2rem, 5vw, 3rem);
-  font-weight: 900;
-  color: #000;
-}
-
-@media (max-width: 760px) {
-  .control-page {
-    padding: 16px;
-  }
-
-  .hero {
-    flex-direction: column;
-    align-items: flex-start;
-  }
-
-  .control-grid {
-    grid-template-columns: 1fr;
-  }
-
-  .quarter-controls {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-
-  .scoreboard {
-    grid-template-columns: 1fr;
-    padding: 20px;
-  }
-
-  .home-team,
-  .away-team {
-    border: none;
-  }
-
-  .center-panel {
-    order: -1;
-    min-width: auto;
-  }
-}
-
-.logo {
-    width: 120px;
-    height: 120px;
-    object-fit: contain;
-}
-
-.team-info {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
+  font-size: 20px;
+  font-weight: bold;
+  color: #555;
+  line-height: 1.1;
 }
