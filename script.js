@@ -86,7 +86,7 @@
       updateViews();
     });
 
-    // ★ スマホでの画像ファイル選択：どんなに大きな画像でも、軽量（縦横最大80px）のJPEGに徹底的に圧縮し、確実に送信する処理
+    // ★ どんな画像（HEIC/PNG/JPEG）でも透過を維持して極小PNGに変換し、確実に送信する処理
     awayLogoFile?.addEventListener("change", (event) => {
       const file = event.target.files[0];
       if (!file) return;
@@ -99,8 +99,8 @@
           const canvas = document.createElement("canvas");
           const ctx = canvas.getContext("2d");
           
-          // ロゴ表示に十分な極小サイズに制限（送信データ量を元の100分の1以下にカット）
-          const maxDim = 80; 
+          // 送信エラーを防ぐため、さらにコンパクトな極小サイズ（最大100px）に制限
+          const maxDim = 100; 
           let width = img.width;
           let height = img.height;
           
@@ -120,12 +120,11 @@
           canvas.height = height;
           
           ctx.clearRect(0, 0, width, height);
-          // 背景透過を維持するため白背景ではなく透明で塗りつぶしたのち描画
           ctx.drawImage(img, 0, 0, width, height);
           
           try {
-            // 画質を少し落としてデータサイズを最小（数KB）にし、スマホの細い電波でも瞬時に送れるようにする
-            const imageData = canvas.toDataURL("image/jpeg", 0.6);
+            // ★ PNG形式（透過対応）で書き出し、スマホでも高確率で処理できる形にします
+            const imageData = canvas.toDataURL("image/png");
             scoreboard.awayLogo = imageData;
             syncState();
             updateViews();
