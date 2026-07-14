@@ -2,8 +2,8 @@
   const socket = io();
   const initialState = {
     homeName: "筑波",
-    awayName: "", // 初期値は完全に空っぽ
-    homeLogo: "images/tsukuba-logo.avif",
+    awayName: "", 
+    homeLogo: "images/筑波ロゴ.avif", // ★ 日本語名に対応させました
     awayLogo: "",
     homeScore: 0,
     awayScore: 0,
@@ -13,15 +13,14 @@
   const savedState = localStorage.getItem("lax_scoreboard_state");
   let scoreboard = savedState ? JSON.parse(savedState) : { ...initialState };
 
-  // ★ データチェック時に絶対に "AWAY" という文字を勝手に代入させないように修正
   function sanitizeState(data) {
     const allowedQuarters = ["Q1", "Q2", "Q3", "Q4"];
     const nextQuarter = allowedQuarters.includes(String(data?.quarter)) ? String(data.quarter) : scoreboard.quarter;
 
     return {
       homeName: "筑波",
-      // データが送られてこなかった場合でも、"AWAY"ではなく空っぽにする
-      awayName: data?.awayName !== undefined && data?.awayName !== null ? String(data.awayName).slice(0, 20) : "",
+      // 絶対に "AWAY" という文字を勝手に代入させない
+      awayName: data?.awayName !== undefined && data?.awayName !== null && String(data.awayName) !== "AWAY" ? String(data.awayName).slice(0, 20) : "",
       awayLogo: data?.awayLogo !== undefined && data?.awayLogo !== null ? String(data.awayLogo) : "",
       homeScore: Math.max(0, Number(data?.homeScore ?? scoreboard.homeScore) || 0),
       awayScore: Math.max(0, Number(data?.awayScore ?? scoreboard.awayScore) || 0),
@@ -58,9 +57,9 @@
 
     if (overlayHomeName) overlayHomeName.textContent = scoreboard.homeName;
     
-    // ★ OBS側の画面テキストも、空っぽなら空っぽのままにする
+    // OBS側の文字が "AWAY" になっていたら空欄に強制修正するガード
     if (overlayAwayName) {
-      overlayAwayName.textContent = scoreboard.awayName ? scoreboard.awayName : "";
+      overlayAwayName.textContent = (scoreboard.awayName && scoreboard.awayName !== "AWAY") ? scoreboard.awayName : "";
     }
     
     if (overlayAwayLogo) {
@@ -148,13 +147,12 @@
       });
     });
 
-    // ★ リセット時に「AWAY」という文字を絶対に代入しない
     resetButton?.addEventListener("click", () => {
       localStorage.removeItem("lax_scoreboard_state");
       scoreboard = {
         homeName: "筑波",
-        awayName: "", // 完全に空欄にする
-        homeLogo: "images/tsukuba-logo.avif",
+        awayName: "", 
+        homeLogo: "images/筑波ロゴ.avif",
         awayLogo: "",
         homeScore: 0,
         awayScore: 0,
