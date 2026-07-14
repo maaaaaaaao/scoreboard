@@ -2,33 +2,33 @@
   const socket = io();
   const initialState = {
     homeName: "筑波",
-    awayName: "",
-    homeLogo: "/images/tsukuba-logo.avif",
+    awayName: "", // 初期値は完全に空っぽ
+    homeLogo: "images/tsukuba-logo.avif",
     awayLogo: "",
     homeScore: 0,
     awayScore: 0,
     quarter: "Q1"
   };
 
-  // ★ 1. ページを読み込んだとき、ブラウザに保存されているデータがあればそれを最優先で復元する
   const savedState = localStorage.getItem("lax_scoreboard_state");
   let scoreboard = savedState ? JSON.parse(savedState) : { ...initialState };
 
+  // ★ データチェック時に絶対に "AWAY" という文字を勝手に代入させないように修正
   function sanitizeState(data) {
     const allowedQuarters = ["Q1", "Q2", "Q3", "Q4"];
     const nextQuarter = allowedQuarters.includes(String(data?.quarter)) ? String(data.quarter) : scoreboard.quarter;
 
     return {
       homeName: "筑波",
-      awayName: data?.awayName !== undefined ? String(data.awayName).slice(0, 20) : scoreboard.awayName,
-      awayLogo: String(data?.awayLogo ?? scoreboard.awayLogo),
+      // データが送られてこなかった場合でも、"AWAY"ではなく空っぽにする
+      awayName: data?.awayName !== undefined && data?.awayName !== null ? String(data.awayName).slice(0, 20) : "",
+      awayLogo: data?.awayLogo !== undefined && data?.awayLogo !== null ? String(data.awayLogo) : "",
       homeScore: Math.max(0, Number(data?.homeScore ?? scoreboard.homeScore) || 0),
       awayScore: Math.max(0, Number(data?.awayScore ?? scoreboard.awayScore) || 0),
       quarter: nextQuarter
     };
   }
 
-  // ★ 2. 同期するときに、最新の状態をブラウザに自動でバックアップ保存する
   function syncState() {
     localStorage.setItem("lax_scoreboard_state", JSON.stringify(scoreboard));
     socket.emit("state", scoreboard);
@@ -57,13 +57,18 @@
     const overlayQuarter = document.getElementById("overlayQuarter");
 
     if (overlayHomeName) overlayHomeName.textContent = scoreboard.homeName;
-    if (overlayAwayName) overlayAwayName.textContent = scoreboard.awayName;
+    
+    // ★ OBS側の画面テキストも、空っぽなら空っぽのままにする
+    if (overlayAwayName) {
+      overlayAwayName.textContent = scoreboard.awayName ? scoreboard.awayName : "";
+    }
     
     if (overlayAwayLogo) {
       if (scoreboard.awayLogo) {
         overlayAwayLogo.src = scoreboard.awayLogo;
         overlayAwayLogo.style.display = "inline-block"; 
       } else {
+        overlayAwayLogo.src = "";
         overlayAwayLogo.style.display = "none";  
       }
     }
@@ -86,29 +91,37 @@
 
     awayLogoFile?.addEventListener("change", (event) => {
       const file = event.target.files[0];
-      if (file) {
-        const reader = new FileReader();
-        reader.onload = (e) => {
-          const img = new Image();
-          img.onload = () => {
-            const canvas = document.createElement("canvas");
-            const ctx = canvas.getContext("2d");
-            
-            const targetWidth = 120; 
-            const targetHeight = (img.height / img.width) * targetWidth;
-            
-            canvas.width = targetWidth;
-            canvas.height = targetHeight;
-            ctx.drawImage(img, 0, 0, targetWidth, targetHeight);
-            
-            scoreboard.awayLogo = canvas.toDataURL("image/png");
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const img = new Image();
+        img.crossOrigin = "anonymous";
+        img.onload = () => {
+          const canvas = document.createElement("canvas");
+          const ctx = canvas.getContext("2d");
+          
+          const targetWidth = 120; 
+          const targetHeight = (img.height / img.width) * targetWidth;
+          
+          canvas.width = targetWidth;
+          canvas.height = targetHeight;
+          
+          ctx.clearRect(0, 0, targetWidth, targetHeight);
+          ctx.drawImage(img, 0, 0, targetWidth, targetHeight);
+          
+          try {
+            const imageData = canvas.toDataURL("image/jpeg", 0.7);
+            scoreboard.awayLogo = imageData;
             syncState();
             updateViews();
-          };
-          img.src = e.target.result;
+          } catch (err) {
+            console.error("スマホ画像処理エラー:", err);
+          }
         };
-        reader.readAsDataURL(file);
-      }
+        img.src = e.target.result;
+      };
+      reader.readAsDataURL(file);
     });
 
     document.querySelectorAll(".score-btn").forEach((button) => {
@@ -135,10 +148,19 @@
       });
     });
 
-    // ★ 3. リセットボタンを押したときだけ、保存したデータを完全に削除する
+    // ★ リセット時に「AWAY」という文字を絶対に代入しない
     resetButton?.addEventListener("click", () => {
-      scoreboard = { ...initialState }; // 初期値に戻す
-      localStorage.removeItem("lax_scoreboard_state"); // 保存データを削除
+      localStorage.removeItem("lax_scoreboard_state");
+      scoreboard = {
+        homeName: "筑波",
+        awayName: "", // 完全に空欄にする
+        homeLogo: "images/tsukuba-logo.avif",
+        awayLogo: "",
+        homeScore: 0,
+        awayScore: 0,
+        quarter: "Q1"
+      };
+      if (awayNameInput) awayNameInput.value = "";
       if (awayLogoFile) awayLogoFile.value = "";
       syncState();
       updateViews();
@@ -153,7 +175,6 @@
 
   socket.on("state", (data) => {
     scoreboard = sanitizeState(data);
-    // 受信したときもブラウザの保存データを更新しておく
     localStorage.setItem("lax_scoreboard_state", JSON.stringify(scoreboard));
     updateViews();
   });
