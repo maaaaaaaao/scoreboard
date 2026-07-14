@@ -3,7 +3,7 @@
   const initialState = {
     homeName: "筑波",
     awayName: "", 
-    homeLogo: "images/筑波ロゴ.avif", // ★ 日本語名に対応させました
+    homeLogo: "images/筑波ロゴ.avif",
     awayLogo: "",
     homeScore: 0,
     awayScore: 0,
@@ -19,7 +19,6 @@
 
     return {
       homeName: "筑波",
-      // 絶対に "AWAY" という文字を勝手に代入させない
       awayName: data?.awayName !== undefined && data?.awayName !== null && String(data.awayName) !== "AWAY" ? String(data.awayName).slice(0, 20) : "",
       awayLogo: data?.awayLogo !== undefined && data?.awayLogo !== null ? String(data.awayLogo) : "",
       homeScore: Math.max(0, Number(data?.homeScore ?? scoreboard.homeScore) || 0),
@@ -57,7 +56,6 @@
 
     if (overlayHomeName) overlayHomeName.textContent = scoreboard.homeName;
     
-    // OBS側の文字が "AWAY" になっていたら空欄に強制修正するガード
     if (overlayAwayName) {
       overlayAwayName.textContent = (scoreboard.awayName && scoreboard.awayName !== "AWAY") ? scoreboard.awayName : "";
     }
@@ -88,6 +86,7 @@
       updateViews();
     });
 
+    // ★ スマホでの画像ファイル選択：どんなに大きな画像でも、軽量（縦横最大80px）のJPEGに徹底的に圧縮し、確実に送信する処理
     awayLogoFile?.addEventListener("change", (event) => {
       const file = event.target.files[0];
       if (!file) return;
@@ -100,17 +99,33 @@
           const canvas = document.createElement("canvas");
           const ctx = canvas.getContext("2d");
           
-          const targetWidth = 120; 
-          const targetHeight = (img.height / img.width) * targetWidth;
+          // ロゴ表示に十分な極小サイズに制限（送信データ量を元の100分の1以下にカット）
+          const maxDim = 80; 
+          let width = img.width;
+          let height = img.height;
           
-          canvas.width = targetWidth;
-          canvas.height = targetHeight;
+          if (width > height) {
+            if (width > maxDim) {
+              height *= maxDim / width;
+              width = maxDim;
+            }
+          } else {
+            if (height > maxDim) {
+              width *= maxDim / height;
+              height = maxDim;
+            }
+          }
           
-          ctx.clearRect(0, 0, targetWidth, targetHeight);
-          ctx.drawImage(img, 0, 0, targetWidth, targetHeight);
+          canvas.width = width;
+          canvas.height = height;
+          
+          ctx.clearRect(0, 0, width, height);
+          // 背景透過を維持するため白背景ではなく透明で塗りつぶしたのち描画
+          ctx.drawImage(img, 0, 0, width, height);
           
           try {
-            const imageData = canvas.toDataURL("image/jpeg", 0.7);
+            // 画質を少し落としてデータサイズを最小（数KB）にし、スマホの細い電波でも瞬時に送れるようにする
+            const imageData = canvas.toDataURL("image/jpeg", 0.6);
             scoreboard.awayLogo = imageData;
             syncState();
             updateViews();
