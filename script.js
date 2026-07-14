@@ -2,21 +2,17 @@
   const socket = io();
   const initialState = {
     homeName: "筑波",
-    awayName: "AWAY",
-    homeLogo: "/images/筑波ロゴ.avif",
-    awayLogo: "", // 最初はアウェイロゴは空（なし）にします
+    awayName: "",
+    homeLogo: "/images/tsukuba-logo.avif",
+    awayLogo: "",
     homeScore: 0,
     awayScore: 0,
     quarter: "Q1"
   };
 
-  let scoreboard = { ...initialState };
-
-  // ページ読み込み時に、保存されている画像があれば復元する
-  const savedAwayLogo = localStorage.getItem("awayLogoData");
-  if (savedAwayLogo) {
-    scoreboard.awayLogo = savedAwayLogo;
-  }
+  // ★ 1. ページを読み込んだとき、ブラウザに保存されているデータがあればそれを最優先で復元する
+  const savedState = localStorage.getItem("lax_scoreboard_state");
+  let scoreboard = savedState ? JSON.parse(savedState) : { ...initialState };
 
   function sanitizeState(data) {
     const allowedQuarters = ["Q1", "Q2", "Q3", "Q4"];
@@ -24,7 +20,7 @@
 
     return {
       homeName: "筑波",
-      awayName: String(data?.awayName ?? scoreboard.awayName).slice(0, 20) || "AWAY",
+      awayName: data?.awayName !== undefined ? String(data.awayName).slice(0, 20) : scoreboard.awayName,
       awayLogo: String(data?.awayLogo ?? scoreboard.awayLogo),
       homeScore: Math.max(0, Number(data?.homeScore ?? scoreboard.homeScore) || 0),
       awayScore: Math.max(0, Number(data?.awayScore ?? scoreboard.awayScore) || 0),
@@ -32,12 +28,13 @@
     };
   }
 
+  // ★ 2. 同期するときに、最新の状態をブラウザに自動でバックアップ保存する
   function syncState() {
+    localStorage.setItem("lax_scoreboard_state", JSON.stringify(scoreboard));
     socket.emit("state", scoreboard);
   }
 
   function updateViews() {
-    // コントロール画面の要素
     const homeNameInput = document.getElementById("homeName");
     const awayNameInput = document.getElementById("awayName");
     const homeScoreDisplay = document.getElementById("homeScoreDisplay");
@@ -52,7 +49,6 @@
       button.classList.toggle("active", button.dataset.quarter === scoreboard.quarter);
     });
 
-    // OBS・スコアボード画面の要素
     const overlayHomeName = document.getElementById("overlayHomeName");
     const overlayAwayName = document.getElementById("overlayAwayName");
     const overlayAwayLogo = document.getElementById("overlayAwayLogo");
@@ -63,13 +59,12 @@
     if (overlayHomeName) overlayHomeName.textContent = scoreboard.homeName;
     if (overlayAwayName) overlayAwayName.textContent = scoreboard.awayName;
     
-    // アウェイロゴの表示処理
     if (overlayAwayLogo) {
       if (scoreboard.awayLogo) {
         overlayAwayLogo.src = scoreboard.awayLogo;
-        overlayAwayLogo.style.display = "block"; // 画像がある時は表示
+        overlayAwayLogo.style.display = "inline-block"; 
       } else {
-        overlayAwayLogo.style.display = "none";  // 画像がない時は非表示（枠が壊れるのを防ぐ）
+        overlayAwayLogo.style.display = "none";  
       }
     }
     
@@ -84,12 +79,11 @@
     const resetButton = document.getElementById("resetButton");
 
     awayNameInput?.addEventListener("input", (event) => {
-      scoreboard.awayName = event.target.value.trim() || "AWAY";
+      scoreboard.awayName = event.target.value;
       syncState();
       updateViews();
     });
 
-    // ファイル選択時の処理
     awayLogoFile?.addEventListener("change", (event) => {
       const file = event.target.files[0];
       if (file) {
@@ -99,19 +93,15 @@
           img.onload = () => {
             const canvas = document.createElement("canvas");
             const ctx = canvas.getContext("2d");
-            const targetWidth = 150; 
+            
+            const targetWidth = 120; 
             const targetHeight = (img.height / img.width) * targetWidth;
             
             canvas.width = targetWidth;
             canvas.height = targetHeight;
             ctx.drawImage(img, 0, 0, targetWidth, targetHeight);
             
-            const imageData = canvas.toDataURL("image/png");
-            scoreboard.awayLogo = imageData;
-            
-            // ローカルストレージに保存して他の画面へ強制同期
-            localStorage.setItem("awayLogoData", imageData);
-            
+            scoreboard.awayLogo = canvas.toDataURL("image/png");
             syncState();
             updateViews();
           };
@@ -145,12 +135,10 @@
       });
     });
 
+    // ★ 3. リセットボタンを押したときだけ、保存したデータを完全に削除する
     resetButton?.addEventListener("click", () => {
-      scoreboard.homeScore = 0;
-      scoreboard.awayScore = 0;
-      scoreboard.quarter = "Q1";
-      scoreboard.awayLogo = "";
-      localStorage.removeItem("awayLogoData"); // 保存された画像を消去
+      scoreboard = { ...initialState }; // 初期値に戻す
+      localStorage.removeItem("lax_scoreboard_state"); // 保存データを削除
       if (awayLogoFile) awayLogoFile.value = "";
       syncState();
       updateViews();
@@ -159,26 +147,14 @@
     updateViews();
   });
 
-  // 他のタブ（OBS画面など）で画像が変わったイベントを検知する
-  window.addEventListener("storage", (event) => {
-    if (event.key === "awayLogoData") {
-      scoreboard.awayLogo = event.newValue || "";
-      updateViews();
-    }
-  });
-
   socket.on("connect", () => {
     syncState();
   });
 
   socket.on("state", (data) => {
     scoreboard = sanitizeState(data);
-    // サーバーから送られてきたデータにロゴがあればそれを優先
-    if (data && data.awayLogo) {
-      scoreboard.awayLogo = data.awayLogo;
-    } else {
-      scoreboard.awayLogo = localStorage.getItem("awayLogoData") || "";
-    }
+    // 受信したときもブラウザの保存データを更新しておく
+    localStorage.setItem("lax_scoreboard_state", JSON.stringify(scoreboard));
     updateViews();
   });
 })();
