@@ -86,53 +86,18 @@
       updateViews();
     });
 
-    // ★ どんな画像（HEIC/PNG/JPEG）でも透過を維持して極小PNGに変換し、確実に送信する処理
+    // ★ 複雑な圧縮処理をすべて廃止！
+    // スマホが選んだ画像（HEICやPNG、JPEGなど）を、最もシンプルかつ安全に「そのまま」読み込んで送信する処理
     awayLogoFile?.addEventListener("change", (event) => {
       const file = event.target.files[0];
       if (!file) return;
 
       const reader = new FileReader();
       reader.onload = (e) => {
-        const img = new Image();
-        img.crossOrigin = "anonymous";
-        img.onload = () => {
-          const canvas = document.createElement("canvas");
-          const ctx = canvas.getContext("2d");
-          
-          // 送信エラーを防ぐため、さらにコンパクトな極小サイズ（最大100px）に制限
-          const maxDim = 100; 
-          let width = img.width;
-          let height = img.height;
-          
-          if (width > height) {
-            if (width > maxDim) {
-              height *= maxDim / width;
-              width = maxDim;
-            }
-          } else {
-            if (height > maxDim) {
-              width *= maxDim / height;
-              height = maxDim;
-            }
-          }
-          
-          canvas.width = width;
-          canvas.height = height;
-          
-          ctx.clearRect(0, 0, width, height);
-          ctx.drawImage(img, 0, 0, width, height);
-          
-          try {
-            // ★ PNG形式（透過対応）で書き出し、スマホでも高確率で処理できる形にします
-            const imageData = canvas.toDataURL("image/png");
-            scoreboard.awayLogo = imageData;
-            syncState();
-            updateViews();
-          } catch (err) {
-            console.error("スマホ画像処理エラー:", err);
-          }
-        };
-        img.src = e.target.result;
+        // 余計な変換を挟まず、読み込んだ画像データ（Base64）をそのまま代入
+        scoreboard.awayLogo = e.target.result;
+        syncState();
+        updateViews();
       };
       reader.readAsDataURL(file);
     });
